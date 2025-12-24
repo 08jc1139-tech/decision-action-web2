@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Decision/Actionログ（ブラウザ版）</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Decision/Actionログ</h1>
+    <p class="subtitle">今日/期限超過を最優先に見るためのブラウザMVP</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>快速追加（30秒入力）</h2>
+      <form id="quick-form">
+        <label>決まったこと
+          <input id="title" name="title" type="text" required placeholder="例: 次回リリース条件を決定" />
+        </label>
+        <label>会議名・文脈
+          <input id="meeting" name="meeting" list="meeting-suggestions" placeholder="例: 定例MTG" />
+        </label>
+        <datalist id="meeting-suggestions"></datalist>
+
+        <label>期限
+          <div class="due-presets">
+            <button type="button" data-due="today" onclick="window.selectPreset('today')" class="preset active">今日</button>
+            <button type="button" data-due="tomorrow" onclick="window.selectPreset('tomorrow')" class="preset">明日</button>
+            <button type="button" data-due="custom" onclick="window.selectPreset('custom')" class="preset">日付指定</button>
+          </div>
+          <input id="due" name="due" type="date" required disabled />
+        </label>
+
+        <label>ステータス
+          <select id="status" name="status">
+            <option value="open">未着手</option>
+            <option value="inProgress">進行中</option>
+            <option value="done">完了</option>
+          </select>
+        </label>
+
+        <label>次のアクション
+          <input id="nextAction" name="nextAction" type="text" placeholder="例: QA完了報告" />
+        </label>
+
+        <div class="form-group">
+          <label>緊急度</label>
+          <div class="urgency-presets">
+            <button type="button" data-urgency="high" onclick="window.selectUrgency('high')" class="preset urgency-high">高</button>
+            <button type="button" data-urgency="medium" onclick="window.selectUrgency('medium')" class="preset urgency-medium active">中</button>
+            <button type="button" data-urgency="low" onclick="window.selectUrgency('low')" class="preset urgency-low">低</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>会議の空気</label>
+          <div class="atmosphere-presets">
+            <button type="button" data-atmosphere="揉めた" onclick="window.selectAtmosphere('揉めた')" class="preset atm-preset">揉めた</button>
+            <button type="button" data-atmosphere="全会一致" onclick="window.selectAtmosphere('全会一致')" class="preset atm-preset">全会一致</button>
+            <button type="button" data-atmosphere="上司ゴリ押し" onclick="window.selectAtmosphere('上司ゴリ押し')" class="preset atm-preset">上司ゴリ押し</button>
+            <button type="button" data-atmosphere="スムーズ" onclick="window.selectAtmosphere('スムーズ')" class="preset atm-preset">スムーズ</button>
+            <button type="button" data-atmosphere="議論白熱" onclick="window.selectAtmosphere('議論白熱')" class="preset atm-preset">議論白熱</button>
+            <button type="button" data-atmosphere="clear" onclick="window.selectAtmosphere(null)" class="preset atm-clear">×</button>
+          </div>
+        </div>
+
+        <label>決定の理由（30文字以内）
+          <input id="reason" name="reason" type="text" maxlength="30" placeholder="例: コスト削減のため" />
+        </label>
+
+        <div class="actions">
+          <button type="submit">保存</button>
+          <button type="button" id="clear-form" class="secondary">クリア</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="list-header">
+        <button class="section-toggle" data-target="list-today" aria-expanded="true">今日</button>
+        <span id="count-today" class="count-badge">0</span>
+      </div>
+      <ul id="list-today" class="item-list"></ul>
+    </section>
+
+    <section class="card">
+      <div class="list-header">
+        <button class="section-toggle" data-target="list-overdue" aria-expanded="true">期限超過</button>
+        <span id="count-overdue" class="count-badge">0</span>
+      </div>
+      <ul id="list-overdue" class="item-list"></ul>
+    </section>
+
+    <section class="card">
+      <div class="list-header">
+        <button class="section-toggle" data-target="list-other" aria-expanded="true">その他</button>
+        <span id="count-other" class="count-badge">0</span>
+      </div>
+      <ul id="list-other" class="item-list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>ローカルブラウザで動作（localStorage保存）。iOS版の代替確認用。</p>
+  </footer>
+
+  <script src="./app.js" type="module"></script>
+</body>
+</html>
