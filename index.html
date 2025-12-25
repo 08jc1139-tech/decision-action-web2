@@ -13,12 +13,44 @@
   </header>
 
   <main>
-    <section class="card">
-      <h2>快速追加（30秒入力）</h2>
+    <section class="card task-card">
+      <div class="list-header">
+        <button class="section-toggle" data-target="list-today" aria-expanded="true">今日</button>
+        <span id="count-today" class="count-badge">0</span>
+      </div>
+      <ul id="list-today" class="item-list"></ul>
+    </section>
+
+    <section class="card task-card">
+      <div class="list-header">
+        <button class="section-toggle" data-target="list-overdue" aria-expanded="true">期限超過</button>
+        <span id="count-overdue" class="count-badge">0</span>
+      </div>
+      <ul id="list-overdue" class="item-list"></ul>
+    </section>
+
+    <section class="card task-card">
+      <div class="list-header">
+        <button class="section-toggle" data-target="list-other" aria-expanded="true">その他</button>
+        <span id="count-other" class="count-badge">0</span>
+      </div>
+      <ul id="list-other" class="item-list"></ul>
+    </section>
+
+    <section class="card completed-card">
+      <div class="list-header">
+        <button class="section-toggle" data-target="list-done" aria-expanded="true">完了済み</button>
+        <span id="count-done" class="count-badge">0</span>
+      </div>
+      <ul id="list-done" class="item-list"></ul>
+    </section>
+
+    <section class="card add-card hidden" id="add-card">
+      <div class="add-card-header">
+        <h2>タスク追加</h2>
+        <button type="button" id="close-add" class="icon-button" aria-label="入力を閉じる">×</button>
+      </div>
       <form id="quick-form">
-        <label>決まったこと
-          <input id="title" name="title" type="text" required placeholder="例: 次回リリース条件を決定" />
-        </label>
         <label>会議名・文脈
           <input id="meeting" name="meeting" list="meeting-suggestions" placeholder="例: 定例MTG" />
         </label>
@@ -33,18 +65,6 @@
           <input id="due" name="due" type="date" required disabled />
         </label>
 
-        <label>ステータス
-          <select id="status" name="status">
-            <option value="open">未着手</option>
-            <option value="inProgress">進行中</option>
-            <option value="done">完了</option>
-          </select>
-        </label>
-
-        <label>次のアクション
-          <input id="nextAction" name="nextAction" type="text" placeholder="例: QA完了報告" />
-        </label>
-
         <div class="form-group">
           <label>緊急度</label>
           <div class="urgency-presets">
@@ -53,6 +73,14 @@
             <button type="button" data-urgency="low" onclick="window.selectUrgency('low')" class="preset urgency-low">低</button>
           </div>
         </div>
+
+        <label>決まったこと
+          <input id="title" name="title" type="text" required placeholder="例: 次回リリース条件を決定" />
+        </label>
+
+        <label>決定の理由（30文字以内）
+          <input id="reason" name="reason" type="text" maxlength="30" placeholder="例: コスト削減のため" />
+        </label>
 
         <div class="form-group">
           <label>会議の空気</label>
@@ -66,8 +94,16 @@
           </div>
         </div>
 
-        <label>決定の理由（30文字以内）
-          <input id="reason" name="reason" type="text" maxlength="30" placeholder="例: コスト削減のため" />
+        <label>ステータス
+          <select id="status" name="status">
+            <option value="open">未着手</option>
+            <option value="inProgress">進行中</option>
+            <option value="done">完了</option>
+          </select>
+        </label>
+
+        <label>次のアクション
+          <input id="nextAction" name="nextAction" type="text" placeholder="例: QA完了報告" />
         </label>
 
         <div class="actions">
@@ -76,31 +112,9 @@
         </div>
       </form>
     </section>
-
-    <section class="card">
-      <div class="list-header">
-        <button class="section-toggle" data-target="list-today" aria-expanded="true">今日</button>
-        <span id="count-today" class="count-badge">0</span>
-      </div>
-      <ul id="list-today" class="item-list"></ul>
-    </section>
-
-    <section class="card">
-      <div class="list-header">
-        <button class="section-toggle" data-target="list-overdue" aria-expanded="true">期限超過</button>
-        <span id="count-overdue" class="count-badge">0</span>
-      </div>
-      <ul id="list-overdue" class="item-list"></ul>
-    </section>
-
-    <section class="card">
-      <div class="list-header">
-        <button class="section-toggle" data-target="list-other" aria-expanded="true">その他</button>
-        <span id="count-other" class="count-badge">0</span>
-      </div>
-      <ul id="list-other" class="item-list"></ul>
-    </section>
   </main>
+
+  <button id="open-add" class="fab" type="button" aria-controls="add-card" aria-expanded="false" aria-label="新規タスク追加" onclick="document.getElementById('add-card').classList.toggle('hidden'); document.getElementById('add-card').style.display = document.getElementById('add-card').classList.contains('hidden') ? 'none' : 'block';">＋</button>
 
   <footer>
     <p>ローカルブラウザで動作（localStorage保存）。iOS版の代替確認用。</p>

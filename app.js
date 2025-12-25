@@ -5,34 +5,75 @@ const state = {
   items: loadItems(),
 };
 
-const form = document.getElementById("quick-form");
-const titleInput = document.getElementById("title");
-const meetingInput = document.getElementById("meeting");
-const dueInput = document.getElementById("due");
-const statusInput = document.getElementById("status");
-const nextActionInput = document.getElementById("nextAction");
-const clearFormButton = document.getElementById("clear-form");
-const meetingSuggestions = document.getElementById("meeting-suggestions");
-const reasonInput = document.getElementById("reason");
+let form;
+let titleInput;
+let meetingInput;
+let dueInput;
+let statusInput;
+let nextActionInput;
+let clearFormButton;
+let meetingSuggestions;
+let reasonInput;
 
-const duePresetButtons = document.querySelectorAll("[data-due]");
-const urgencyPresetButtons = document.querySelectorAll("[data-urgency]");
-const atmospherePresetButtons = document.querySelectorAll("[data-atmosphere]");
-const sectionToggles = document.querySelectorAll(".section-toggle");
+let duePresetButtons;
+let urgencyPresetButtons;
+let atmospherePresetButtons;
+let sectionToggles;
 
-const listToday = document.getElementById("list-today");
-const listOverdue = document.getElementById("list-overdue");
-const listOther = document.getElementById("list-other");
-const countToday = document.getElementById("count-today");
-const countOverdue = document.getElementById("count-overdue");
-const countOther = document.getElementById("count-other");
+let listToday;
+let listOverdue;
+let listOther;
+let countToday;
+let countOverdue;
+let countOther;
+let listDone;
+let countDone;
+let addCard;
+let openAddButton;
+let closeAddButton;
 
 let selectedUrgency = "medium";
 let selectedAtmosphere = null;
 
-init();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 
 function init() {
+  form = document.getElementById("quick-form");
+  titleInput = document.getElementById("title");
+  meetingInput = document.getElementById("meeting");
+  dueInput = document.getElementById("due");
+  statusInput = document.getElementById("status");
+  nextActionInput = document.getElementById("nextAction");
+  clearFormButton = document.getElementById("clear-form");
+  meetingSuggestions = document.getElementById("meeting-suggestions");
+  reasonInput = document.getElementById("reason");
+
+  duePresetButtons = document.querySelectorAll("[data-due]");
+  urgencyPresetButtons = document.querySelectorAll("[data-urgency]");
+  atmospherePresetButtons = document.querySelectorAll("[data-atmosphere]");
+  sectionToggles = document.querySelectorAll(".section-toggle");
+
+  listToday = document.getElementById("list-today");
+  listOverdue = document.getElementById("list-overdue");
+  listOther = document.getElementById("list-other");
+  countToday = document.getElementById("count-today");
+  countOverdue = document.getElementById("count-overdue");
+  countOther = document.getElementById("count-other");
+  listDone = document.getElementById("list-done");
+  countDone = document.getElementById("count-done");
+  addCard = document.getElementById("add-card");
+  openAddButton = document.getElementById("open-add");
+  closeAddButton = document.getElementById("close-add");
+
+  if (!form) {
+    console.warn("form not found; abort init");
+    return;
+  }
+
   selectPreset("today");
   selectUrgency("medium");
   selectAtmosphere(null);
@@ -95,6 +136,7 @@ function handleSave() {
   selectPreset("today");
   selectUrgency("medium");
   selectAtmosphere(null);
+  toggleAddCard(false);
 }
 
 function render() {
@@ -102,8 +144,13 @@ function render() {
   const todayItems = [];
   const overdueItems = [];
   const otherItems = [];
+  const doneItems = [];
 
   state.items.forEach((item) => {
+    if (item.status === "done") {
+      doneItems.push(item);
+      return;
+    }
     const dueDate = new Date(item.due);
     if (isToday(dueDate, now)) {
       todayItems.push(item);
@@ -117,15 +164,19 @@ function render() {
   updateList(listToday, todayItems);
   updateList(listOverdue, overdueItems);
   updateList(listOther, otherItems);
+  updateList(listDone, doneItems, { mode: "done" });
 
   countToday.textContent = todayItems.length;
   countOverdue.textContent = overdueItems.length;
   countOther.textContent = otherItems.length;
+  countDone.textContent = doneItems.length;
 
   updateMeetingSuggestions();
 }
 
-function updateList(target, items) {
+function updateList(target, items, options = {}) {
+  const mode = options.mode || "active";
+  if (!target) return;
   target.innerHTML = "";
   if (!items.length) {
     const empty = document.createElement("li");
@@ -138,6 +189,9 @@ function updateList(target, items) {
   items.forEach((item) => {
     const li = document.createElement("li");
     li.className = "item";
+    if (mode === "done" || item.status === "done") {
+      li.classList.add("done");
+    }
 
     const agingLevel = getAgingLevel(item);
     if (agingLevel > 0) {
@@ -168,11 +222,18 @@ function updateList(target, items) {
 
     const actions = document.createElement("div");
     actions.className = "item-actions";
-    const doneBtn = document.createElement("button");
-    doneBtn.textContent = "完了にする";
-    doneBtn.className = "secondary";
-    doneBtn.addEventListener("click", () => markDone(item.id));
-    actions.appendChild(doneBtn);
+    if (mode === "done") {
+      const doneBadge = document.createElement("span");
+      doneBadge.className = "done-badge";
+      doneBadge.textContent = "完了済";
+      actions.appendChild(doneBadge);
+    } else {
+      const doneBtn = document.createElement("button");
+      doneBtn.textContent = "完了にする";
+      doneBtn.className = "secondary";
+      doneBtn.addEventListener("click", () => markDone(item.id));
+      actions.appendChild(doneBtn);
+    }
 
     li.appendChild(titleRow);
     li.appendChild(meta);
@@ -358,8 +419,43 @@ function toggleSection(button) {
   button.setAttribute("aria-expanded", (!collapsed).toString());
 }
 
+function toggleAddCard(forceOpen) {
+  // 毎回DOMから要素を取得して確実に動作させる
+  const card = document.getElementById("add-card");
+  const openBtn = document.getElementById("open-add");
+  const titleField = document.getElementById("title");
+
+  if (!card) {
+    console.error("add-card not found");
+    return;
+  }
+
+  const isHidden = card.classList.contains("hidden");
+  const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : isHidden;
+
+  if (shouldOpen) {
+    card.classList.remove("hidden");
+    card.style.display = "block";
+    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (titleField) {
+      titleField.focus();
+    }
+  } else {
+    card.classList.add("hidden");
+    card.style.display = "none";
+    if (openBtn) {
+      openBtn.focus();
+    }
+  }
+
+  if (openBtn) {
+    openBtn.setAttribute("aria-expanded", shouldOpen.toString());
+  }
+}
+
 // グローバル公開（HTML の inline handler から呼ぶため）
 window.selectPreset = selectPreset;
 window.selectUrgency = selectUrgency;
 window.selectAtmosphere = selectAtmosphere;
 window.toggleSection = toggleSection;
+window.toggleAddCard = toggleAddCard;
